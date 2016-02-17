@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+# display usage
+usage() {
+    cat <<EOF
+Run your app in Run-Pause-Run-Pause toggle model.
+Usage: 
+    $APP_NAME [-a i|ri|run] [-p path] [your_app[+id]] [-- app args...]
+Option:
+    -a, action, default run without initial. i: initial, run first; ri, reverse initial, pause in the first round.
+    -p, directory to store toggle status, default $marker_store_path.
+EOF
+}
+
+
+# config
+marker_store_path=$HOME/bin/tmp/toggle-run
+status_toggle_bin=$HOME/bin/status-toggle.sh
+
+APP_NAME=$(basename $0)
+action='run' # default action
+# read the options
+TEMP=$(getopt -o 'ha:p:' -l 'help' -n $APP_NAME -- "$@")
+eval set -- "$TEMP"
+while true; do
+    case $1 in
+        -a) 
+            case $2 in
+                i|ri|run) action=$2; shift 2
+                    ;;
+                *) echo "${APP_NAME}: '$2': invalid action" 2>&1; exit 1
+                    ;;
+            esac
+            ;;
+        -p) marker_store_path=$2; shift 2
+            ;;
+        -h|--help) usage&&exit 0
+            ;;
+        --) shift; break
+            ;;
+    esac
+done
+[[ -z $1 ]] && echo "${APP_NAME}: Missing app." 1>&2 && exit 1
+if [[ $1 = *+* ]]; then
+    app=${1%+*}
+    app_id=${1##*+}
+else
+    app=$1
+fi
+shift
+
+[[ ! -w $marker_store_path ]] && echo "Permission denied: directory '$marker_store_path'" 1>&2 && exit 1
+job_identifer=$marker_store_path/$(basename $app)${app_id}
+
+if [[ $action = i ]]; then
+    $status_toggle_bin -ai $job_identifer
+elif [[ $action = ri ]]; then
+    $status_toggle_bin -ari $job_identifer
+else
+    $status_toggle_bin $job_identifer && exec $app "$@"
+fi
