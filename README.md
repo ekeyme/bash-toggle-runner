@@ -7,7 +7,7 @@ toggle-run and status-toggle use `getopt`, not the bash buildin `getopts` to par
 ##Why this?
 I write these 2 bash script, cause I come cross a situation that I want to run a cronjob daemon every two weeks, on friday on my server basing on crontab. As show in the [crontab manual](http://man7.org/linux/man-pages/man5/crontab.5.html), there is not a direct way to solve this sityation. And a [Q.A. in serverfault](http://serverfault.com/questions/633264/cronjob-run-every-two-weeks-on-saturday-starting-on-this-saturday) solve this in a brilliant way as following:
 ```bash
-0 19 * * 5 [[ $(($(date +\%W)\%2)) = 1 ]] && your app here
+0 19 * * 5 [[ $((10#$(date +\%W)\%2)) = 1 ]] && your app here
 ```
 
 But I have many cronjobs just like this on my server, and there are some similar situations too, for another example, you might want to echo same prety mark on the even line of your output(maybe this example is not very appropriate, never mind!). Also,with the purpose of gaining more controls on my cronjob. So I write there 2 to patch my needing.
